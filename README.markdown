@@ -122,8 +122,8 @@ Adicione as seguintes variáveis ao seu arquivo `.env`:
 
 ```env
 # Configurações da API de Combustível
-COMBUSTIVEL_API_URL=https://combustivel-backend-production.up.railway.app
-COMBUSTIVEL_API_TOKEN=sk_76b360c77e98c25befa2292ea95f308ceaf328df66f3dacb04e472eef3aa8b84
+COMBUSTIVEL_API_URL=
+COMBUSTIVEL_API_TOKEN=
 ENABLE_API_UPLOAD=true
 ```
 
