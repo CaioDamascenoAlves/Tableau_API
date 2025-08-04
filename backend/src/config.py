@@ -20,6 +20,11 @@ class Config:
         self.VIEW_ID = os.getenv("VIEW_ID")
         self.NAME_FILE_ORIGINAL = os.getenv("NAME_FILE_ORIGINAL", "BASE_DE_DADOS.csv")
         self.NAME_FILE_PROCESSED = os.getenv("NAME_FILE_PROCESSED", "ANALISE_DE_PEDIDOS.xlsx")
+        
+        # Configurações da API de Combustível
+        self.COMBUSTIVEL_API_URL = os.getenv("COMBUSTIVEL_API_URL")
+        self.COMBUSTIVEL_API_TOKEN = os.getenv("COMBUSTIVEL_API_TOKEN")
+        self.ENABLE_API_UPLOAD = os.getenv("ENABLE_API_UPLOAD", "true").lower() == "true"
     
     def ensure_output_directory(self):
         """Cria o diretório de saída caso ele não exista."""
@@ -40,6 +45,13 @@ class Config:
         for config in required_configs:
             if not getattr(self, config):
                 missing_configs.append(config)
+        
+        # Verificar configurações da API se upload estiver habilitado
+        if self.ENABLE_API_UPLOAD:
+            api_configs = ['COMBUSTIVEL_API_URL', 'COMBUSTIVEL_API_TOKEN']
+            for config in api_configs:
+                if not getattr(self, config):
+                    missing_configs.append(config)
         
         if missing_configs:
             raise Exception(f"Configurações obrigatórias não definidas: {', '.join(missing_configs)}")

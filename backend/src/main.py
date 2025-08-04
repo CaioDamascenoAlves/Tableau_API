@@ -4,6 +4,7 @@ from .data_processing import DataProcessor
 from .config import Config
 from .utils import Logger
 from .progress import TaskProgress
+from .api_integration import CombustivelAPIUploader
 import os
 from tqdm import tqdm
 
@@ -15,6 +16,18 @@ class TableauAPIApp:
         self.authenticator = TableauAuthenticator(self.config)
         self.data_processor = DataProcessor()
         self.logger = Logger("TableauAPIApp")
+        
+        # Inicializar uploader apenas se upload estiver habilitado e configurações estiverem presentes
+        if (self.config.ENABLE_API_UPLOAD and 
+            self.config.COMBUSTIVEL_API_URL and 
+            self.config.COMBUSTIVEL_API_TOKEN):
+            self.api_uploader = CombustivelAPIUploader(
+                self.config.COMBUSTIVEL_API_URL,
+                self.config.COMBUSTIVEL_API_TOKEN
+            )
+        else:
+            self.api_uploader = None
+            
         self.server = None
         self.exporter = None
     
@@ -74,6 +87,10 @@ class TableauAPIApp:
                 ("Transformando dados", lambda: self.data_processor.transform_csv_to_xlsx(csv_path, xlsx_path))
             ]
             
+            # Adicionar upload da API se habilitado
+            if self.config.ENABLE_API_UPLOAD and self.api_uploader:
+                main_steps.append(("Enviando para API de Combustível", lambda: self._upload_to_api(xlsx_path)))
+            
             for step_name, step_function in tqdm(main_steps, desc="Progresso geral", unit="etapa"):
                 self.logger.info(f"Executando: {step_name}")
                 step_function()
@@ -104,6 +121,37 @@ class TableauAPIApp:
             print(f"   📈 XLSX: {xlsx_size:,} bytes")
         
         print()
+    
+    def _upload_to_api(self, xlsx_path):
+        """Faz upload do arquivo XLSX para a API de combustível."""
+        try:
+            self.logger.info(f"Iniciando upload para API: {xlsx_path}")
+            
+            # Verificar se o arquivo existe
+            if not os.path.exists(xlsx_path):
+                raise FileNotFoundError(f"Arquivo não encontrado para upload: {xlsx_path}")
+            
+            # Realizar upload
+            result = self.api_uploader.upload_file(xlsx_path)
+            
+            if result.get("success"):
+                self.logger.info("Upload para API realizado com sucesso!")
+                print(f"✅ Arquivo enviado para API: {os.path.basename(xlsx_path)}")
+                
+                # Mostrar informações do resultado se disponível
+                if "data" in result:
+                    data = result["data"]
+                    if isinstance(data, dict) and "message" in data:
+                        print(f"   📤 Resposta da API: {data['message']}")
+            else:
+                self.logger.error("Falha no upload para API")
+                print(f"❌ Falha no upload para API")
+                
+        except Exception as e:
+            self.logger.error(f"Erro no upload para API: {str(e)}")
+            print(f"⚠️  Erro no upload para API: {str(e)}")
+            # Não falha o processo principal se o upload falhar
+            print("   ℹ️  O processamento principal foi concluído com sucesso")
 
 def main():
     """Função principal de entrada da aplicação."""

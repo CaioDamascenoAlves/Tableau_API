@@ -16,6 +16,7 @@ Este sistema foi desenvolvido com arquitetura orientada a objetos para:
 - ✅ **Autenticação segura** via Personal Access Token
 - ✅ **Exportação automatizada** de dados do Tableau Cloud
 - ✅ **Transformação de dados** CSV para XLSX com processamento avançado
+- ✅ **Upload automático** para API de Combustível
 - ✅ **Barras de progresso visuais** para acompanhar o processo
 - ✅ **Sistema de logging** completo com arquivos de log
 - ✅ **Arquitetura modular** orientada a objetos
@@ -31,12 +32,17 @@ backend/
 │   ├── auth.py              # Autenticação no Tableau Cloud
 │   ├── tableau_export.py    # Exportação de dados do Tableau
 │   ├── data_processing.py   # Processamento e transformação de dados
+│   ├── api_integration.py   # Integração com API de Combustível
 │   ├── progress.py          # Sistema de barras de progresso
 │   ├── utils.py             # Utilitários (logging, validações)
 │   └── main.py              # Aplicação principal
 ├── output/                  # Arquivos gerados (CSV e XLSX)
 ├── logs/                    # Arquivos de log da aplicação
 ├── requirements.txt         # Dependências Python
+├── test_api.py             # Script de teste da API
+├── exemplo_progresso.py     # Demonstração do sistema de progresso
+└── .env.example            # Exemplo de variáveis de ambiente
+```
 ├── exemplo_progresso.py     # Demonstração do sistema de progresso
 └── README.markdown          # Esta documentação
 ```
@@ -106,6 +112,35 @@ NAME_FILE_PROCESSED=ANALISE_DE_PEDIDOS.xlsx
 3. `123456` é o `WORKBOOK_ID`
 4. `789012` é o `VIEW_ID`
 
+## 🔗 Integração com API de Combustível
+
+O sistema inclui integração automática com a API de Combustível para upload dos arquivos processados.
+
+### Configuração da API
+
+Adicione as seguintes variáveis ao seu arquivo `.env`:
+
+```env
+# Configurações da API de Combustível
+COMBUSTIVEL_API_URL=https://combustivel-backend-production.up.railway.app
+COMBUSTIVEL_API_TOKEN=sk_76b360c77e98c25befa2292ea95f308ceaf328df66f3dacb04e472eef3aa8b84
+ENABLE_API_UPLOAD=true
+```
+
+### Teste da API
+
+```bash
+# Teste a conexão com a API
+python test_api.py
+```
+
+### Fluxo Completo
+
+1. **Exportação** do Tableau Cloud (CSV)
+2. **Processamento** dos dados (CSV → XLSX)
+3. **Upload automático** para API de Combustível
+4. **Feedback visual** de cada etapa
+
 ## 🎮 Como Usar
 
 ### Execução Básica
@@ -114,6 +149,10 @@ NAME_FILE_PROCESSED=ANALISE_DE_PEDIDOS.xlsx
 # Execute a aplicação principal
 python -m src.main
 ```
+
+### Execução com Upload para API
+
+O upload para API acontece automaticamente se `ENABLE_API_UPLOAD=true` no `.env`.
 
 ### Exemplo de Saída
 
@@ -129,7 +168,10 @@ Inicializando aplicação: 100%|████████| 100/100 [00:02<00:00, 
 Autenticando no Tableau: 100%|████████| 100/100 [00:01<00:00, 85.1%/s]
 Exportando dados do Tableau: 100%|████████| 100/100 [00:05<00:00, 18.3%/s]
 Processando dados CSV para XLSX: 100%|████████| 100/100 [00:01<00:00, 92.4%/s]
-Progresso geral: 100%|████████| 2/2 [00:09<00:00, 4.8s/etapa]
+Enviando arquivo para API: 100%|████████| 100/100 [00:03<00:00, 28.7%/s]
+✅ Arquivo enviado para API: ANALISE_DE_PEDIDOS.xlsx
+   📤 Resposta da API: Arquivo processado com sucesso
+Progresso geral: 100%|████████| 3/3 [00:12<00:00, 4.2s/etapa]
 
 ✅ Processamento concluído com sucesso!
 ============================================================
@@ -228,15 +270,18 @@ tableauserverclient==0.38
 python-dotenv==1.1.1
 pandas==2.3.1
 openpyxl==3.1.5
-tqdm==4.66.2
+tqdm==4.67.1
+requests==2.31.0
 ```
 
 ## 🔒 Segurança
 
 - ⚠️ **Nunca commite o arquivo `.env`** 
 - 🔐 **Mantenha o PAT seguro** e renove periodicamente
+- 🔑 **Proteja o token da API** de Combustível - use seu próprio token
 - 📝 **Monitore logs** para atividades suspeitas
 - 🚫 **Revogue tokens** não utilizados no Tableau Cloud
+- ✅ **Sem credenciais hard-coded** - todas as configurações vêm do `.env`
 
 ## 🚧 Próximos Passos
 
